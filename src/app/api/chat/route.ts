@@ -17,7 +17,18 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const message = typeof body.message === "string" ? body.message.slice(0, 2000) : "";
-    const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
+    const rawHistory = Array.isArray(body.history) ? body.history.slice(-10) : [];
+
+    // Gemini's API requires chat history to start with a "user" role message
+    // and strictly alternate after that. The chat widget's UI seeds the
+    // conversation with a hardcoded greeting ("model" role) so there's
+    // something to show before the visitor types anything -- but that
+    // greeting must never be sent to Gemini as history, or every request
+    // gets rejected. Drop any leading messages until the first "user" one.
+    const firstUserIndex = rawHistory.findIndex(
+      (h: { role?: string }) => h?.role === "user"
+    );
+    const history = firstUserIndex === -1 ? [] : rawHistory.slice(firstUserIndex);
 
     if (!message.trim()) {
       return NextResponse.json({ error: "Message is required." }, { status: 400 });
@@ -32,3 +43,4 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+}
