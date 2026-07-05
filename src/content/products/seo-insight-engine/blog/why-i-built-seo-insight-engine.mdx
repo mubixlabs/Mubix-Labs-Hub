@@ -1,0 +1,46 @@
+---
+title: "Why I built a VS Code extension for SEO (and what I actually found)"
+description: "How a context-switching frustration turned into a VS Code extension and what happened when I audited 20 real developer sites with it."
+date: "2026-07-01"
+author: "Mubix Labs"
+---
+
+Here is a version of a day I've had more than once.
+
+I finish building a feature. I push it. Then, two days later, I find out the page has no meta description, the image I added didn't have alt text, and Lighthouse is reporting a CLS score of 0.4 because of the hero section.
+
+None of those things were hard to fix. All of them would have taken less than five minutes to catch. But I caught them two days late, after Google had already crawled the broken version.
+
+The frustrating part isn't that SEO is complicated for most developer projects, it isn't. The frustrating part is that the tools to catch these problems exist, but they all live somewhere else. You open a browser. You paste a URL. You wait. You get a report. You go back to the editor. You fix something. You repeat.
+
+That's six context switches to fix a missing alt attribute.
+
+## What I did about it
+
+I built a VS Code extension that runs these checks in the place where the code already is. When you run a check, the issues appear right there in the Output panel, pointing at the problems, without leaving the editor.
+
+The core insight was: *every check that matters before you ship is predictable.* Missing title? Predictable. No viewport tag? Predictable. Images without alt text? Predictable. If something is predictable, it can be a rule. If it can be a rule, a computer can check it faster than a human can remember to.
+
+## What I found when I audited 20 real developer sites
+
+After building the extension, I ran it against 20 portfolio and personal project sites built by developers the kind of sites where you'd expect the builder to care about technical details. Here's what I found:
+
+- 17 out of 20 had at least one image missing alt text
+- 14 out of 20 had a meta description under 50 characters or missing entirely
+- 12 out of 20 had more than one H1 tag on their homepage
+- 9 out of 20 were missing a viewport meta tag
+- 6 out of 20 had no structured data (schema) at all
+
+None of these are exotic edge cases. They're the basics. And they were wrong on 85% of the sites I checked sites built by developers who clearly knew what they were doing technically.
+
+The conclusion I drew: these things aren't wrong because developers don't know better. They're wrong because there was never a moment in the build process where something stopped and said "hey, you forgot this."
+
+That's what SEO Insight Engine is supposed to be. That moment.
+
+## Try it
+
+SEO Insight Engine is free to install from the VS Code Marketplace. The free plan covers SEO checks, accessibility scanning, schema generation, image compression, and dead code detection the things that matter most for most projects. No account required.
+
+If you want Core Web Vitals scoring and the visual dashboard, that's what Pro is for.
+
+Search for "SEO Insight Engine" in VS Code, or find it at [mubixlabs.studio](/products/seo-insight-engine).

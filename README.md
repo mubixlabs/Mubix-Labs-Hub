@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mubix Labs — Products Hub
+
+`products.mubixlabs.studio` — the hub site for all Mubix Labs developer tools (VS Code extensions, Chrome extensions, micro SaaS products).
+
+## Tech Stack
+
+- **Framework:** Next.js 15+ (App Router, TypeScript, static generation)
+- **Styling:** Tailwind CSS v4
+- **Content:** MDX (docs, blog posts, legal pages) via `next-mdx-remote`
+- **Backend:** Firebase (Firestore) for license/webhook data
+- **AI Chat:** Google Gemini
+- **Email:** Zoho Mail SMTP (your own mubixlabs.studio mailboxes via nodemailer)
+- **Rate limiting:** Upstash Redis
+- **Payments/Licensing:** Lemon Squeezy
+- **Hosting:** Vercel
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.example .env.local   # fill in real values
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Adding a New Product
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+No new routes or pages need to be written. The entire `/products/[slug]/*` route tree is dynamic and statically generated from data:
 
-## Learn More
+1. Add a new entry to `src/config/products.ts` (name, pricing, description, icon, colors, Lemon Squeezy variant IDs)
+2. Create content folders:
+   ```
+   src/content/products/<new-slug>/docs/*.mdx
+   src/content/products/<new-slug>/blog/*.mdx
+   ```
+3. Deploy. The product automatically appears on `/products`, gets its own landing/pricing/docs/blog pages, and is included in `sitemap.xml`.
 
-To learn more about Next.js, take a look at the following resources:
+## Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+See `.env.example` for the full list. Required for a working deploy:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `NEXT_PUBLIC_FIREBASE_*` — Firebase client config
+- `FIREBASE_ADMIN_*` — Firebase Admin service account (server only)
+- `GEMINI_API_KEY` — powers the chat widget
+- `ZOHO_SMTP_USER`, `ZOHO_SMTP_PASSWORD`, `EMAIL_TO` — contact form email delivery via your Zoho mailbox
+- `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — rate limiting on `/api/chat` and `/api/contact`
+- `LICENSE_PROVIDER_WEBHOOK_SECRET` — Lemon Squeezy webhook signature verification
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/                    # routes (App Router)
+│   ├── (marketing)/        # about, contact
+│   ├── (legal)/            # privacy, terms, cookies
+│   ├── blog/                # global company blog
+│   ├── products/[slug]/    # dynamic product pages (landing, pricing, docs, blog)
+│   └── api/                 # chat, contact, license webhook
+├── components/
+│   ├── layout/              # Header, Footer, MobileSidebar, CookieConsent
+│   ├── chat/                 # ChatWidget
+│   ├── sections/             # Hero, ProductCard, ContactForm
+│   └── seo/                  # MDXContent renderer
+├── content/
+│   ├── legal/                # privacy-policy.mdx, terms-of-service.mdx, cookie-policy.mdx
+│   ├── pages/                 # about.mdx
+│   ├── main-blog/             # global blog posts
+│   └── products/<slug>/       # per-product docs/ and blog/
+├── config/
+│   ├── site.ts                 # brand, contact, colors
+│   └── products.ts             # single source of truth for all products
+└── lib/                        # firebase, firebase-admin, ai, mdx, rate-limit, utils
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment (Vercel)
+
+1. Push to GitHub
+2. Import the repo in Vercel
+3. Add all environment variables from `.env.example`
+4. Attach custom domain `products.mubixlabs.studio`
+5. Set up the Lemon Squeezy webhook to point to `https://products.mubixlabs.studio/api/license`
+
+## SEO Checklist
+
+- [x] Dynamic `sitemap.xml` (auto-includes every product, doc, and blog post)
+- [x] `robots.txt` allowing full crawl, blocking `/api/`
+- [x] Per-page canonical URLs and Open Graph/Twitter metadata
+- [x] JSON-LD: Organization (site-wide), SoftwareApplication (per product), Article (per blog post)
+- [x] Security headers (CSP, HSTS, X-Frame-Options, etc.) in `next.config.ts`

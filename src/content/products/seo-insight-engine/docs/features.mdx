@@ -1,0 +1,126 @@
+---
+title: "Features"
+description: "Detailed reference for every check and tool in SEO Insight Engine."
+date: "2026-07-01"
+order: 3
+---
+
+## SEO Checker
+
+Analyzes HTML files (and JSX/TSX components via a live render) for common SEO issues.
+
+**What it checks:**
+- `<title>` tag presence, length (warns if under 10 or over 60 characters)
+- `<meta name="description">` presence and length (warns if over 160 characters)
+- `<meta name="viewport">` presence (critical for mobile ranking)
+- Heading structure warns if multiple `<h1>` tags are found on one page
+- Image `alt` attributes flags every image missing an alt text
+- Canonical link detects missing or duplicate canonical tags
+- robots.txt validates file exists and is correctly formatted
+- sitemap.xml validates file exists
+
+**Supported file types:** `.html`, `.htm`, and live URLs (via Full Audit/Dashboard)
+
+## Accessibility Checker
+
+Runs alongside every SEO check automatically.
+
+**What it checks:**
+- `<html lang="">` attribute required for screen readers
+- Empty links `<a>` tags with no visible text and no `aria-label`
+- Empty buttons `<button>` tags with no text and no `aria-label`
+- Unlabeled form inputs `<input>` fields without a corresponding `<label>` or `aria-label`
+- Missing alt text (also flagged by SEO checker)
+
+**Compliance target:** WCAG 2.1 Level AA (subset)
+
+## Schema Generator
+
+Generates valid JSON-LD structured data to improve your Google rich results eligibility.
+
+**Supported schema types:**
+- **Article** for blog posts and editorial content (includes author, date published)
+- **Product** for e-commerce and product pages (includes price, currency, aggregate rating)
+- **Review** for review content
+
+**How to use:**
+1. Open a file and position your cursor where you want the schema inserted
+2. Run `SEO: Generate Schema Markup`
+3. Answer the prompts
+4. The schema code is inserted directly at your cursor position, ready to use
+
+## Dead Code Detector
+
+Analyzes TypeScript and JavaScript files to find imports that are declared but never referenced in the file.
+
+**Supports:**
+- Default imports: `import foo from 'bar'`
+- Named imports: `import { foo, bar } from 'baz'`
+- Namespace imports: `import * as foo from 'bar'`
+
+**How to use:** Open the file you want to check (`.ts`, `.tsx`, `.js`, `.jsx`), then run `SEO: Find Unused Imports`.
+
+**Note:** This is a static file-level check. It does not perform project-wide type analysis. For comprehensive dead code elimination across a full codebase, consider using this alongside a dedicated type checker.
+
+## Image Optimizer
+
+Compresses images in-place and converts them to the WebP format for better loading performance.
+
+**Supported input formats:** JPG, JPEG, PNG
+
+**Output format:** WebP (with configurable quality default: 80%)
+
+**How to use:** In the Explorer panel, right-click any `.jpg`, `.jpeg`, or `.png` file → select **"SEO: Optimize Image"**. The compressed file is saved alongside the original with an `-optimized.webp` suffix. The original file is not modified.
+
+**Typical results:** 60–85% file size reduction depending on the input image.
+
+## Full Audit (Live URL) Free
+
+Renders a URL using a headless browser, then runs all SEO and accessibility checks against the fully-rendered HTML. This means it works correctly on any JavaScript framework React, Next.js, Vue, Angular, Svelte, Astro, and more.
+
+**How to use:**
+1. Start your local development server (`npm run dev`, `ng serve`, etc.)
+2. Run `SEO: Run Full Audit (Live URL)`
+3. Enter your local URL (e.g. `http://localhost:3000`)
+4. Results appear in the Output panel
+
+**Important:** Use `http://` not `https://` for local dev servers, which typically don't have SSL certificates installed.
+
+## Performance Audit Pro
+
+Runs a full Lighthouse audit against your development server and returns:
+- **Performance score** (0–100)
+- **Accessibility score** (0–100)
+- **SEO score** (0–100)
+- **LCP** — Largest Contentful Paint (how fast the main content loads)
+- **CLS** — Cumulative Layout Shift (how much the page visually shifts during load)
+
+**How to use:**
+1. Ensure your dev server is running
+2. Run `SEO: Run Performance Audit`
+3. Enter your local URL
+4. Wait 10–20 seconds for Lighthouse to complete its analysis
+
+**Note:** Performance audits are best run on a stable machine with no other heavy processes running, as resource availability affects scores.
+
+## Visual Dashboard Pro
+
+Combines the Full Audit and Performance Audit into a single visual panel showing:
+- Color-coded score cards (green ≥ 90, amber ≥ 50, red < 50)
+- LCP and CLS metrics
+- Full list of all issues found, with severity indicators
+
+**How to use:** Run `SEO: Open Full Dashboard` and enter your dev server URL.
+
+## Framework Support
+
+The Live URL audit works by rendering your page in a headless browser and analyzing the actual HTML output not the source code. This means it works the same way regardless of what framework generated the HTML.
+
+**Tested frameworks:**
+- React (Create React App, Vite)
+- Next.js (Pages Router and App Router)
+- Vue 3 (Vite)
+- Angular
+- Static HTML
+
+**In theory, any framework that runs a local dev server is supported.** If you encounter an issue with a specific framework, please report it via our support channel.

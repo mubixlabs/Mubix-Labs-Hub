@@ -1,0 +1,36 @@
+---
+title: "Troubleshooting"
+description: "Fixes for common errors and issues."
+date: "2026-07-01"
+order: 5
+---
+
+## "Failed to load page: Navigation timeout"
+
+- Make sure your dev server is actually running before triggering the audit
+- Check that you're using `http://` not `https://` for local URLs
+- Some sites with heavy background network activity may need a longer timeout check our GitHub issues for workarounds
+
+## "Dashboard failed: SSL error"
+
+Same as above your local dev server is running plain HTTP. Use `http://localhost:PORT`.
+
+## Performance audit is very slow
+
+The first audit after starting VS Code is slower because the headless browser needs to start. Subsequent audits on the same VS Code session will be noticeably faster. Expected time: 10–25 seconds.
+
+## "Invalid or expired license key"
+
+- Make sure you copied the full key from your purchase email
+- Keys are tied to the email you purchased with contact support@mubixlabs.studio if you believe this is an error
+
+## Image optimization fails
+
+- Confirm the file is a supported format: JPG, JPEG, or PNG
+- Very large images (over 50MB) may time out try splitting them first
+
+## Still stuck?
+
+- **Issue tracker:** [github.com/mubixlabs/seo-insight-engine/issues](https://github.com/mubixlabs/seo-insight-engine/issues)
+- **Email support:** support@mubixlabs.studio
+- **Pro + AI / Team priority support:** reply to your purchase confirmation email
