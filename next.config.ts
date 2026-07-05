@@ -12,6 +12,7 @@ const ContentSecurityPolicy = `
   base-uri 'self';
   form-action 'self';
   object-src 'none';
+  upgrade-insecure-requests;
 `.replace(/\s{2,}/g, " ").trim();
 
 const securityHeaders = [
@@ -22,6 +23,8 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), interest-cohort=()" },
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
 ];
 
 const nextConfig: NextConfig = {
@@ -47,6 +50,14 @@ const nextConfig: NextConfig = {
         source: "/:all*(svg|jpg|jpeg|png|webp|avif|ico|woff|woff2)",
         headers: [
           { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+      {
+        // API routes handle sensitive/dynamic data (chat, contact form, license
+        // webhooks) - never let a CDN or browser cache these responses.
+        source: "/api/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
         ],
       },
     ];
