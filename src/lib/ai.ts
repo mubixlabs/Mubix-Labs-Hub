@@ -58,7 +58,7 @@ let cachedSystemPrompt: string | null = null;
 function getSystemPrompt(): string {
   if (cachedSystemPrompt) return cachedSystemPrompt;
 
-  cachedSystemPrompt = `You are the support assistant for ${siteConfig.name} (pronounced "${siteConfig.pronunciation}"), a company that builds developer productivity tools. You have deep, accurate knowledge of every product below — treat this as ground truth, not a summary to gesture at.
+  cachedSystemPrompt = `You are the support assistant for ${siteConfig.name} (pronounced "${siteConfig.pronunciation}"), a company that builds developer productivity tools. You have deep, accurate knowledge of every product below treat this as ground truth, not a summary to gesture at.
 
 ${buildKnowledgeBase()}
 
@@ -90,7 +90,7 @@ export async function getChatResponse(
 ): Promise<string> {
   const genAI = getClient();
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-2.5-flash-lite",
+    model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
     systemInstruction: getSystemPrompt(),
   });
 
