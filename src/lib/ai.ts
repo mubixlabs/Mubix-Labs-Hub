@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
 import { products } from "@/config/products";
 import { siteConfig } from "@/config/site";
 import { getProductDocs, getProductBlogPosts } from "@/lib/mdx";
@@ -84,6 +84,15 @@ function getClient() {
   return client;
 }
 
+export class ChatServiceError extends Error {
+  constructor(
+    message: string,
+    public readonly kind: "rate_limit" | "blocked" | "empty" | "unknown"
+  ) {
+    super(message);
+  }
+}
+
 export async function getChatResponse(
   history: { role: "user" | "model"; text: string }[],
   message: string
@@ -92,6 +101,17 @@ export async function getChatResponse(
   const model = genAI.getGenerativeModel({
     model: process.env.GEMINI_MODEL || "gemini-2.0-flash",
     systemInstruction: getSystemPrompt(),
+    // Default safety thresholds ("BLOCK_MEDIUM_AND_ABOVE") can occasionally
+    // over-block completely benign conversational text. Since this is a
+    // narrow-purpose product support bot (not open-ended user content),
+    // relaxing to BLOCK_ONLY_HIGH avoids false-positive blocks while still
+    // stopping genuinely harmful content.
+    safetySettings: [
+      { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+      { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+      { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+      { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
+    ],
   });
 
   const chat = model.startChat({
@@ -99,6 +119,37 @@ export async function getChatResponse(
     generationConfig: { maxOutputTokens: 512, temperature: 0.5 },
   });
 
-  const result = await chat.sendMessage(message);
-  return result.response.text();
+  let result;
+  try {
+    result = await chat.sendMessage(message);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("Gemini API call failed:", msg);
+    if (msg.includes("429") || msg.toLowerCase().includes("quota") || msg.toLowerCase().includes("rate")) {
+      throw new ChatServiceError("Rate limited by Gemini API", "rate_limit");
+    }
+    throw new ChatServiceError(msg, "unknown");
+  }
+
+  const candidate = result.response.candidates?.[0];
+  const finishReason = candidate?.finishReason;
+
+  if (finishReason && finishReason !== "STOP" && finishReason !== "MAX_TOKENS") {
+    console.error("Gemini response blocked or incomplete:", finishReason, result.response.promptFeedback);
+    throw new ChatServiceError(`Response blocked (${finishReason})`, "blocked");
+  }
+
+  let text: string;
+  try {
+    text = result.response.text();
+  } catch (err) {
+    console.error("Failed to extract text from Gemini response:", err, result.response.promptFeedback);
+    throw new ChatServiceError("Empty or blocked response", "empty");
+  }
+
+  if (!text || !text.trim()) {
+    throw new ChatServiceError("Empty response text", "empty");
+  }
+
+  return text;
 }
