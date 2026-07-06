@@ -46,17 +46,16 @@ export function ChatWidget() {
         }),
       });
 
-      if (!res.ok) throw new Error("Request failed");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.error || "Request failed");
+      }
       const data = await res.json();
       setMessages((prev) => [...prev, { role: "model", text: data.reply }]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "model",
-          text: `Sorry, something went wrong. Please email us at ${siteConfig.contact.support}.`,
-        },
-      ]);
+    } catch (err) {
+      const fallback = `Sorry, something went wrong. Please email us at ${siteConfig.contact.support}.`;
+      const text = err instanceof Error && err.message ? err.message : fallback;
+      setMessages((prev) => [...prev, { role: "model", text }]);
     } finally {
       setLoading(false);
     }
