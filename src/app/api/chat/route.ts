@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getChatResponse } from "@/lib/ai";
+import { getChatResponse, ChatServiceError } from "@/lib/ai";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -38,6 +38,26 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply });
   } catch (err) {
     console.error("Chat API error:", err);
+
+    if (err instanceof ChatServiceError) {
+      if (err.kind === "rate_limit") {
+        return NextResponse.json(
+          { error: "Our AI provider is briefly at capacity. Please try again in a few seconds." },
+          { status: 429 }
+        );
+      }
+      if (err.kind === "blocked" || err.kind === "empty") {
+        return NextResponse.json(
+          {
+            error:
+              "I couldn't generate a reply to that one try rephrasing, or email us at " +
+              "support@mubixlabs.studio if this keeps happening.",
+          },
+          { status: 502 }
+        );
+      }
+    }
+
     return NextResponse.json(
       { error: "Something went wrong. Please try again shortly." },
       { status: 500 }
